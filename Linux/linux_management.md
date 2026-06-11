@@ -1,102 +1,222 @@
-## Going into student2's home directory
+# Linux Management Lab: Restoring the `student2` User Environment
 
-**Command**
+This exercise involved diagnosing and repairing a broken user environment for `student2`. Although the user account existed, it was missing a home directory and had an unexpected shell configuration.
 
-```cd /home/student2```
+---
 
-**Output**
+## Objective
 
-```-bash: cd: /home/student2: No such file or directory```
+Restore a functional login environment for the user `student2` by:
 
-## Becoming student2 and finding out I still don't see the home directory
+* Creating the missing home directory
+* Populating it with default configuration files
+* Assigning correct ownership
+* Correcting the default shell
+* Verifying successful login
 
-**command**
+---
 
-``` su - student2```
+## 1. Identifying the Problem
 
-**Output**
+Attempting to access the user's home directory revealed that it did not exist.
 
-```Password: 
-su: warning: cannot change directory to /home/student2: No such file or directory```
+### Command
 
-## Giving student2 a home directoru
+```bash
+cd /home/student2
+```
 
-```@skodi:~$ sudo mkdir /home/student2
-[sudo] password for skodi: 
-skodi@skodi:~$ cp -r /etc/skel/. /home/student2```
+### Output
 
-##Realized that I needed to do all this as root user and made the correction
- 
-```cp: cannot create regular file '/home/student2/./.bash_logout': Permission denied
+```text
+-bash: cd: /home/student2: No such file or directory
+```
+
+Attempting to switch to the account confirmed the issue.
+
+### Command
+
+```bash
+su - student2
+```
+
+### Output
+
+```text
+su: warning: cannot change directory to /home/student2: No such file or directory
+```
+
+### Observation
+
+The user account existed, but its home directory had not been created.
+
+---
+
+## 2. Creating the Home Directory
+
+To restore the user's environment, I created the missing directory.
+
+### Command
+
+```bash
+sudo mkdir /home/student2
+```
+
+Next, I attempted to copy the default user configuration files from `/etc/skel`.
+
+### Command
+
+```bash
+cp -r /etc/skel/. /home/student2
+```
+
+### Output
+
+```text
+cp: cannot create regular file '/home/student2/./.bash_logout': Permission denied
 cp: cannot create regular file '/home/student2/./.bashrc': Permission denied
-cp: cannot create regular file '/home/student2/./.profile': Permission denied```
+cp: cannot create regular file '/home/student2/./.profile': Permission denied
+```
 
-```skodi@skodi:~$ sudo cp -r /etc/skel/. /home/student2```
-## Fixed the ownership
+### Lesson Learned
 
-```skodi@skodi:~$ sudo chown student2:student2 /home/student2
-skodi@skodi:~$ su -s student2 
-Password: 
-This is the Z Shell configuration function for new users,
-zsh-newuser-install.
-You are seeing this message because you have no zsh startup files
-(the files .zshenv, .zprofile, .zshrc, .zlogin in the directory
-~).  This function can help you with a few settings that should
-make your use of the shell easier.
+Creating the directory with `sudo` was not enough. Copying files into it also required elevated privileges.
 
-You can:
+---
 
-(q)  Quit and do nothing.  The function will be run again next time.
+## 3. Populating the Home Directory
 
-(0)  Exit, creating the file ~/.zshrc containing just a comment.
-     That will prevent this function being run again.
+I repeated the copy operation with administrative privileges.
 
-(1)  Continue to the main menu.
+### Command
 
-(2)  Populate your ~/.zshrc with the configuration recommended
-     by the system administrator and exit (you will need to edit
-     the file by hand, if so desired).
+```bash
+sudo cp -r /etc/skel/. /home/student2
+```
 
---- Type one of the keys in parentheses --- E
-Aborting.
-The function will be run again next time.  To prevent this, execute:
-  touch ~/.zshrc
-/home/student2```
+The directory was successfully populated with the default user configuration files.
 
-## Changed the shell to bash
+---
 
-skodi@skodi:~$ sudo usermod -s /bin/bash student2
-[sudo] password for skodi: 
+## 4. Fixing Ownership
+
+Because the directory and files were created by `root`, ownership needed to be transferred to `student2`.
+
+### Command
+
+```bash
+sudo chown -R student2:student2 /home/student2
+```
+
+### Lesson Learned
+
+A user should own their own home directory and its contents. Incorrect ownership can prevent normal file operations.
+
+---
+
+## 5. Encountering an Unexpected Shell
+
+After attempting to log in, I was presented with the Z Shell (`zsh`) setup wizard.
+
+### Output
+
+```text
+This is the Z Shell configuration function for new users...
+```
+
+### Observation
+
+The account was configured to use `zsh` as its default shell instead of `bash`.
+
+---
+
+## 6. Changing the Default Shell
+
+To match the lab requirements, I changed the default shell to Bash.
+
+### Command
+
+```bash
+sudo usermod -s /bin/bash student2
+```
+
+I then verified the change.
+
+### Command
+
+```bash
+grep student2 /etc/passwd
+```
+
+### Output
+
+```text
 student2:x:1001:1001::/home/student2:/bin/bash
-skodi@skodi:~$ sudo grep student2 /etc/passwd[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cusermod -s /bin/bash student2[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cexit[Ksu - student2
-[?2004lPassword: 
-[?2004hstudent2@skodi:~$ pwd
-[?2004l/home/student2
-[?2004hstudent2@skodi:~$ k[Kls
-[?2004l[?2004hstudent2@skodi:~$ ls -a
-[?2004l[0m[01;34m.[0m  [01;34m..[0m  .bash_logout  .bashrc  .profile  .zcompdump
-[?2004hstudent2@skodi:~$ ls -l
-[?2004ltotal 0
-[?2004hstudent2@skodi:~$ ls[K[Kls -la -l
-[?2004ltotal 72
-drwxr-xr-x 2 student2 student2  4096 Jun 11 12:11 [0m[01;34m.[0m
-drwxr-xr-x 4 root     root      4096 Jun 11 12:07 [01;34m..[0m
--rw-r--r-- 1 student2 student2   220 Jun 11 12:08 .bash_logout
--rw-r--r-- 1 student2 student2  3771 Jun 11 12:08 .bashrc
--rw-r--r-- 1 student2 student2   807 Jun 11 12:08 .profile
--rw-rw-r-- 1 student2 student2 50426 Jun 11 12:11 .zcompdump
-[?2004hstudent2@skodi:~$ ch[Kd /etc/pam.d
-[?2004l[?2004hstudent2@skodi:/etc/pam.d$ pwd
-[?2004l/etc/pam.d
-[?2004hstudent2@skodi:/etc/pam.d$ cd ..
-[?2004l[?2004hstudent2@skodi:/etc$ pd[Kwd
-[?2004l/etc
-[?2004hstudent2@skodi:/etc$ cd
-[?2004l[?2004hstudent2@skodi:~$ pwd
-[?2004l/home/student2
-[?2004hstudent2@skodi:~$ exit
-[?2004llogout
-[?2004hskodi@skodi:~$ eit[K[Kxit
-[?2004lexit
+```
 
-Script done on 2026-06-11 12:24:24+03:00 [COMMAND_EXIT_CODE="0"]
+### Lesson Learned
+
+The user's default shell is stored in `/etc/passwd` and can be modified using `usermod -s`.
+
+---
+
+## 7. Verification
+
+After the corrections, I logged in successfully.
+
+### Commands
+
+```bash
+su - student2
+pwd
+```
+
+### Output
+
+```text
+/ home/student2
+```
+
+I also verified that the default configuration files existed.
+
+### Command
+
+```bash
+ls -la
+```
+
+### Relevant Output
+
+```text
+.bash_logout
+.bashrc
+.profile
+.zcompdump
+```
+
+Finally, I tested navigation between directories and confirmed that the `cd` command correctly returned me to the user's home directory.
+
+---
+
+## Results
+
+The `student2` account now has:
+
+* A valid home directory
+* Correct file ownership
+* Default user configuration files
+* Bash configured as the default shell
+* A fully functional login environment
+
+---
+
+## Key Takeaways
+
+1. A user account can exist even when its home directory is missing.
+2. Default user configuration files are stored in `/etc/skel`.
+3. Administrative tasks require appropriate privileges.
+4. Ownership should be verified after creating files on behalf of another user.
+5. The default shell can be viewed in `/etc/passwd` and modified with `usermod -s`.
+6. Troubleshooting often involves following one problem until it reveals the next.
+
+
