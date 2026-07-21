@@ -1,0 +1,76 @@
+# Python String Formatting
+
+Four ways to inject values into a string.
+
+## 1. `%` Operator (legacy, C-style)
+
+```python
+format_str = "Hello, %s. %s enough for ya?"
+values = ('world', 'Hot')
+result = format_str % values
+# 'Hello, world. Hot enough for ya?'
+```
+
+- `%s` — placeholder, converts value to string via `str()`
+- Other specifiers: `%d` (int), `%.3f` (float, 3 decimals)
+- Values passed as a tuple, filled in order
+
+Legacy only — avoid in new code.
+
+## 2. Template Strings (`string` module)
+
+```python
+from string import Template
+tmpl = Template("Hello, $who! $what enough for ya?")
+result = tmpl.substitute(who="Mars", what="Dusty")
+# 'Hello, Mars! Dusty enough for ya?'
+```
+
+- Placeholders: `$name`
+- `.substitute()` fills them via keyword arguments
+- Use when templates come from untrusted input — no arbitrary code execution
+
+## 3. `.format()` (Python 2.6+)
+
+```python
+# Positional, sequential
+"{}, {} and {}".format("first", "second", "third")
+# 'first, second and third'
+
+# Positional, reordered
+"{2} {0} {1}".format("be", "or", "to")
+# 'to be or'
+
+# Named + format spec
+from math import pi
+"{name} is approximately {value:.2f}.".format(value=pi, name="π")
+# 'π is approximately 3.14.'
+```
+
+- `{}` — sequential placeholder
+- `{n}` — index n, allows reordering
+- `{name}` — named placeholder, matches a keyword argument
+- `{name:.2f}` — `:` separates the field from the format spec (`.2f` = float, 2 decimals)
+
+## 4. f-strings (Python 3.6+)
+
+```python
+from math import e
+f"Euler's constant is roughly {e:.3f}."
+# "Euler's constant is roughly 2.718."
+```
+
+- `f"..."` prefix
+- `{var}` — references variable directly, no separate arguments needed
+- `{var:.3f}` — same format spec syntax as `.format()`
+
+Default choice for modern Python — faster, cleaner, more concise.
+
+## Summary
+
+| Method       | Syntax                          | Feature                     | Version        |
+|--------------|----------------------------------|------------------------------|-----------------|
+| `%` operator | `"Hi %s" % name`                | Legacy C-style               | All             |
+| Template     | `Template("$w").substitute(w=x)` | Safe, shell-style            | 2.4+            |
+| `.format()`  | `"{0}".format(x)`                | Positional & named fields    | 2.6+ / 3.0+     |
+| f-string     | `f"Hi {name}"`                   | Inline, concise, fast        | 3.6+ (default)  |
