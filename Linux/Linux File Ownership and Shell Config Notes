@@ -1,0 +1,59 @@
+# Linux File Ownership + Shell Config Notes
+
+## File Ownership
+
+Every file/directory has an owner (user) and a group.
+
+- Check ownership: `ls -l`
+  - 3rd column = user, 4th column = group
+- Only root can change the owner of a file.
+- Changing the group only requires root, or being a member of the target group.
+
+### chown — change owner (and/or group)
+
+```bash
+chown user file
+chown user:group file
+chown -R user:group directory   # recursive
+```
+
+### chgrp — change group only
+
+```bash
+chgrp group file
+```
+
+## Editing .bashrc
+
+`.bashrc` runs automatically every time a new Bash shell starts. Aliases, env vars, and shell options go here.
+
+Add a permanent alias:
+
+```bash
+alias ls='ls --color=auto'
+```
+
+Edit it:
+
+```bash
+vi ~/.bashrc
+```
+
+Apply changes without restarting the terminal:
+
+```bash
+source ~/.bashrc
+```
+
+## Gotcha: opening a directory instead of a file in Vim
+
+Running `vi ~` (directory) instead of `vi ~/.bashrc` (file) opens Vim's Netrw file browser, not an editable buffer. This produces:
+
+```
+E21: Cannot make changes, 'modifiable' is off
+```
+
+Fix: quit (`:q`), then open the actual file path, not the directory.
+
+- `~` = home directory
+- `~/.bashrc` = the file inside it
